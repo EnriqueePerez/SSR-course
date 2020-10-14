@@ -1,5 +1,8 @@
+/* eslint-disable comma-dangle */
+/* eslint-disable indent */
 /* eslint-disable global-require */
 import express from 'express';
+import helmet from 'helmet';
 import webpack from 'webpack';
 import React from 'react';
 import { renderToString } from 'react-dom/server'; //Funcion para renderear los componentes como string
@@ -24,6 +27,11 @@ if (process.env.ENV === 'development') {
 
   app.use(webpackDevMiddleware(compiler, serverConfig));
   app.use(webpackHotMiddleware(compiler));
+} else {
+  app.use(express.static(`${__dirname}/public`));
+  app.use(helmet()); //enabling helmet protections
+  app.use(helmet.permittedCrossDomainPolicies()); //blocking adobe flash scripts
+  app.disable('x-powered-by'); //disabling the powered by header
 }
 
 const setResponse = (html, preloadedState) => {
@@ -38,11 +46,11 @@ const setResponse = (html, preloadedState) => {
     </body>
     <script src="assets/app.js" type="text/javascript"></script>
     <script>
-      window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
-        /</g,
-        '\\u003c'
-      )}
-    </script>
+    window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
+      /</g,
+      // eslint-disable-next-line comma-dangle
+      '\\u003c'
+    )}</script>
   </html>`;
 };
 
