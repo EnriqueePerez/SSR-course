@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 /* eslint-disable comma-dangle */
 /* eslint-disable global-require */
 import express from 'express';
@@ -12,6 +13,7 @@ import { StaticRouter } from 'react-router-dom'; //router
 import serverRoutes from '../frontend/routes/serverRoutes';
 import reducer from '../frontend/reducers'; //redux
 import initialState from '../frontend/initialState'; //redux
+import getManifest from './getManifest';
 
 require('dotenv').config();
 
@@ -27,18 +29,24 @@ if (process.env.ENV === 'development') {
   app.use(webpackDevMiddleware(compiler, serverConfig));
   app.use(webpackHotMiddleware(compiler));
 } else {
+  app.use((req, res, next) => {
+    if (!req.hashManifest) req.hashManifest = getManifest();
+    next();
+  });
   app.use(express.static(`${__dirname}/public`));
   app.use(helmet()); //enabling helmet protections
   app.use(helmet.permittedCrossDomainPolicies()); //blocking adobe flash scripts
   app.disable('x-powered-by'); //disabling the powered by header
 }
 
-const setResponse = (html, preloadedState) => {
+const setResponse = (html, preloadedState, manifest) => {
+  const mainStyles = manifest ? manifest['main.css'] : 'assets/app.css'; //Getting the right file thanks to the manifest
+  const mainBuild = manifest ? manifest['main.js'] : 'assets/app.js';
   return `
   <!DOCTYPE html>
   <html>
     <head>
-      <link rel="stylesheet" href="assets/app.css" type="text/css"> 
+      <link rel="stylesheet" href=${mainStyles} type="text/css"> 
       <title>Platzi Video</title>
     </head>
     <body>
@@ -49,7 +57,7 @@ const setResponse = (html, preloadedState) => {
         '\\u003c'
       )}
       </script>
-      <script src="assets/app.js" type="text/javascript"></script>
+      <script src=${mainBuild} type="text/javascript"></script>
     </body>
   </html>`;
 };
@@ -66,7 +74,7 @@ const renderApp = (req, res) => {
   );
   //con esta funcion preparamos el provider para el redux y el router,
   //dentro del router colocamos la funcion renderRoutes y le pasamos el archivo de las rutas
-  res.send(setResponse(html, preloadedState)); // Sending the component and the state
+  res.send(setResponse(html, preloadedState, req.hashManifest)); // Sending the component and the state
 };
 
 app.get('*', renderApp);
