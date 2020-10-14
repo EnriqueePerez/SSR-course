@@ -26,7 +26,7 @@ if (process.env.ENV === 'development') {
   app.use(webpackHotMiddleware(compiler));
 }
 
-const setResponse = (html) => {
+const setResponse = (html, preloadedState) => {
   return `<!DOCTYPE html>
   <html>
     <head>
@@ -37,11 +37,18 @@ const setResponse = (html) => {
       <div id="app">${html}</div>
     </body>
     <script src="assets/app.js" type="text/javascript"></script>
+    <script>
+      window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
+        /</g,
+        '\\u003c'
+      )}
+    </script>
   </html>`;
 };
 
 const renderApp = (req, res) => {
   const store = createStore(reducer, initialState);
+  const preloadedState = store.getState(); //preparing the state to be send via response
   const html = renderToString(
     <Provider store={store}>
       <StaticRouter location={req.url} context={{}}>
@@ -51,7 +58,7 @@ const renderApp = (req, res) => {
   );
   //con esta funcion preparamos el provider para el redux y el router,
   //dentro del router colocamos la funcion renderRoutes y le pasamos el archivo de las rutas
-  res.send(setResponse(html));
+  res.send(setResponse(html, preloadedState)); // Sending the component and the state
 };
 
 app.get('*', renderApp);
