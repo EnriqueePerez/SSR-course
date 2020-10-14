@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable operator-linebreak */
 /* eslint-disable indent */
 const path = require('path');
@@ -33,6 +34,29 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin()],
+    splitChunks: {
+      chunks: 'async',
+      name: true,
+      cacheGroups: {
+        vendors: {
+          name: 'vendors',
+          chunks: 'all',
+          reuseExistingChunk: true,
+          priority: 1,
+          filename: isDev ? 'assets/vendor.js' : 'assets/vendor-[hash].js',
+          enforce: true,
+          test(module, chunks) {
+            const name = module.nameForCondition && module.nameForCondition();
+            return chunks.some(
+              // eslint-disable-next-line arrow-parens
+              (chunk) =>
+                // eslint-disable-next-line implicit-arrow-linebreak
+                chunk.name !== 'vendors' && /[\\/]node_modules[\\/]/.test(name)
+            );
+          },
+        },
+      },
+    },
   },
   module: {
     rules: [
