@@ -1,9 +1,8 @@
 /* eslint-disable comma-dangle */
-/* eslint-disable indent */
 /* eslint-disable global-require */
 import express from 'express';
-import helmet from 'helmet';
 import webpack from 'webpack';
+import helmet from 'helmet';
 import React from 'react';
 import { renderToString } from 'react-dom/server'; //Funcion para renderear los componentes como string
 import { Provider } from 'react-redux'; //redux
@@ -35,22 +34,23 @@ if (process.env.ENV === 'development') {
 }
 
 const setResponse = (html, preloadedState) => {
-  return `<!DOCTYPE html>
+  return `
+  <!DOCTYPE html>
   <html>
     <head>
-      <link rel="stylesheet" href="assets/app.css" type="text/css"/> 
+      <link rel="stylesheet" href="assets/app.css" type="text/css"> 
       <title>Platzi Video</title>
     </head>
     <body>
       <div id="app">${html}</div>
+      <script>
+      window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
+        /</g,
+        '\\u003c'
+      )}
+      </script>
+      <script src="assets/app.js" type="text/javascript"></script>
     </body>
-    <script src="assets/app.js" type="text/javascript"></script>
-    <script>
-    window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
-      /</g,
-      // eslint-disable-next-line comma-dangle
-      '\\u003c'
-    )}</script>
   </html>`;
 };
 
